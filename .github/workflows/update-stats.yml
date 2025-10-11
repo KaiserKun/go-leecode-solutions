@@ -1,0 +1,64 @@
+name: Update LeetCode Stats
+
+on:
+  push:
+    paths:
+      - "easy/**"
+      - "medium/**"
+      - "hard/**"
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Count problems
+        id: count
+        run: |
+          # 统计各难度题目数量（排除测试文件）
+          EASY=$(find easy -type f -name "*.go" ! -name "*_test.go" 2>/dev/null | wc -l)
+          MEDIUM=$(find medium -type f -name "*.go" ! -name "*_test.go" 2>/dev/null | wc -l)
+          HARD=$(find hard -type f -name "*.go" ! -name "*_test.go" 2>/dev/null | wc -l)
+          TOTAL=$((EASY + MEDIUM + HARD))
+
+          echo "easy=$EASY" >> $GITHUB_OUTPUT
+          echo "medium=$MEDIUM" >> $GITHUB_OUTPUT
+          echo "hard=$HARD" >> $GITHUB_OUTPUT
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+
+      - name: Update README.md (English)
+        run: |
+          EASY=${{ steps.count.outputs.easy }}
+          MEDIUM=${{ steps.count.outputs.medium }}
+          HARD=${{ steps.count.outputs.hard }}
+          TOTAL=${{ steps.count.outputs.total }}
+
+          # 更新英文版 README
+          sed -i "s/\*\*[0-9]* problems solved\*\* ([0-9]* Easy \/ [0-9]* Medium \/ [0-9]* Hard)/**${TOTAL} problems solved** (${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard)/g" README.md
+          sed -i "s/Total\*\*: [0-9]* problems/Total**: ${TOTAL} problems/g" README.md
+          sed -i "s/Difficulty\*\*: [0-9]* Easy \/ [0-9]* Medium \/ [0-9]* Hard/Difficulty**: ${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard/g" README.md
+
+      - name: Update README_CN.md (Chinese)
+        run: |
+          EASY=${{ steps.count.outputs.easy }}
+          MEDIUM=${{ steps.count.outputs.medium }}
+          HARD=${{ steps.count.outputs.hard }}
+          TOTAL=${{ steps.count.outputs.total }}
+
+          # 更新中文版 README
+          sed -i "s/已完成 \*\*[0-9]* 道\*\*（简单 [0-9]* \/ 中等 [0-9]* \/ 困难 [0-9]*）/已完成 **${TOTAL} 道**（简单 ${EASY} \/ 中等 ${MEDIUM} \/ 困难 ${HARD}）/g" README_CN.md
+          sed -i "s/总题数\*\*: [0-9]* 道/总题数**：${TOTAL} 道/g" README_CN.md
+          sed -i "s/难度分布\*\*：简单 [0-9]* \/ 中等 [0-9]* \/ 困难 [0-9]*/难度分布**：简单 ${EASY} \/ 中等 ${MEDIUM} \/ 困难 ${HARD}/g" README_CN.md
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md README_CN.md
+          git diff --staged --quiet || git commit -m "📊 Auto update LeetCode stats"
+          git push
