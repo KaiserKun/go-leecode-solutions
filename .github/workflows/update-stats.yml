@@ -129,17 +129,13 @@ jobs:
           HARD=${{ steps.count.outputs.hard }}
           TOTAL=${{ steps.count.outputs.total }}
           
-          # Create PR body content using a here-document to avoid YAML parsing issues
-          cat > /tmp/pr_body.txt << EOF
-This PR updates README.md and README_CN.md with the latest problem counts.
+          # Create PR using gh CLI with inline body
+          gh pr create \
+            --base "${BASE_BRANCH}" \
+            --head "${BRANCH}" \
+            --title "📊 Auto update LeetCode stats" \
+            --body "This PR updates README.md and README_CN.md with the latest problem counts.
 
-**Stats:**
-- Easy: ${EASY}
-- Medium: ${MEDIUM}
-- Hard: ${HARD}
-- Total: ${TOTAL}
+Stats: Easy ${EASY}, Medium ${MEDIUM}, Hard ${HARD}, Total ${TOTAL}
 
-Triggered by workflow run: ${GITHUB_RUN_ID}
-EOF
-          
-          gh pr create --base "${BASE_BRANCH}" --head "${BRANCH}" --title "📊 Auto update LeetCode stats" --body-file /tmp/pr_body.txt
+Triggered by workflow run ${GITHUB_RUN_ID}"
