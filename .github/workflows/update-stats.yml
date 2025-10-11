@@ -129,11 +129,8 @@ jobs:
           HARD=${{ steps.count.outputs.hard }}
           TOTAL=${{ steps.count.outputs.total }}
           
-          gh pr create \
-            --base "${BASE_BRANCH}" \
-            --head "${BRANCH}" \
-            --title "📊 Auto update LeetCode stats" \
-            --body "This PR updates README.md and README_CN.md with the latest problem counts.
+          # Create PR body content
+          PR_BODY="This PR updates README.md and README_CN.md with the latest problem counts.
 
 **Stats:**
 - Easy: ${EASY}
@@ -142,3 +139,9 @@ jobs:
 - Total: ${TOTAL}
 
 Triggered by workflow run: ${GITHUB_RUN_ID}"
+          
+          gh pr create \
+            --base "${BASE_BRANCH}" \
+            --head "${BRANCH}" \
+            --title "📊 Auto update LeetCode stats" \
+            --body "${PR_BODY}"
