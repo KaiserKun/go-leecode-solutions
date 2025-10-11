@@ -55,10 +55,10 @@ jobs:
 
           # Update "X problems solved" line
           sed -i "s/\*\*[0-9]\+ problems solved\*\* ([0-9]\+ Easy \/ [0-9]\+ Medium \/ [0-9]\+ Hard)/**${TOTAL} problems solved** (${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard)/g" README.md
-          
+
           # Update "Total: X problems" line
           sed -i "s/\*\*Total\*\*: [0-9]\+ problems/**Total**: ${TOTAL} problems/g" README.md
-          
+
           # Update "Difficulty: X Easy / Y Medium / Z Hard" line
           sed -i "s/\*\*Difficulty\*\*: [0-9]\+ Easy \/ [0-9]\+ Medium \/ [0-9]\+ Hard/**Difficulty**: ${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard/g" README.md
 
@@ -79,10 +79,10 @@ jobs:
 
           # Update "已完成 X 道" line
           sed -i "s/已完成 \*\*[0-9]\+ 道\*\*（简单 [0-9]\+ \/ 中等 [0-9]\+ \/ 困难 [0-9]\+）/已完成 **${TOTAL} 道**（简单 ${EASY} \/ 中等 ${MEDIUM} \/ 困难 ${HARD}）/g" README_CN.md
-          
+
           # Update "总题数：X 道" line
           sed -i "s/\*\*总题数\*\*：[0-9]\+ 道/**总题数**：${TOTAL} 道/g" README_CN.md
-          
+
           # Update "难度分布：简单 X / 中等 Y / 困难 Z" line
           sed -i "s/\*\*难度分布\*\*：简单 [0-9]\+ \/ 中等 [0-9]\+ \/ 困难 [0-9]\+/**难度分布**：简单 ${EASY} \/ 中等 ${MEDIUM} \/ 困难 ${HARD}/g" README_CN.md
 
@@ -114,24 +114,26 @@ jobs:
           # Create a new branch and push it. Avoid pushing to protected branch.
           BRANCH="auto/update-stats-${GITHUB_RUN_ID}"
           BASE_BRANCH="${GITHUB_REF#refs/heads/}"
-          
+
           # Create and checkout new branch
           git checkout -b "$BRANCH"
-          
+
           # Push the new branch using the token for authentication
           git push -u origin "$BRANCH"
 
-          # Create a pull request from the new branch to the base branch
-          REPO="${GITHUB_REPOSITORY}"
-          PR_TITLE="📊 Auto update LeetCode stats"
-          PR_BODY="This PR updates README stats automatically.%0A%0ATriggered by workflow run: ${GITHUB_RUN_ID}"
-
+          # Create a pull request using GitHub CLI (more reliable than curl)
           echo "Creating PR from ${BRANCH} -> ${BASE_BRANCH}"
+          
+          gh pr create \
+            --base "${BASE_BRANCH}" \
+            --head "${BRANCH}" \
+            --title "📊 Auto update LeetCode stats" \
+            --body "This PR updates README.md and README_CN.md with the latest problem counts.
 
-          curl -X POST \
-            -H "Authorization: token ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${REPO}/pulls" \
-            -d "{\"title\":\"${PR_TITLE}\",\"head\":\"${BRANCH}\",\"base\":\"${BASE_BRANCH}\",\"body\":\"${PR_BODY}\"}" \
-            || echo "PR creation may have failed, but branch was pushed successfully"
+**Stats:**
+- Easy: ${{ steps.count.outputs.easy }}
+- Medium: ${{ steps.count.outputs.medium }}
+- Hard: ${{ steps.count.outputs.hard }}
+- Total: ${{ steps.count.outputs.total }}
+
+Triggered by workflow run: ${GITHUB_RUN_ID}"
