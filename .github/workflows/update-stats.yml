@@ -79,7 +79,9 @@ jobs:
           echo "--- README_CN.md after ---"
           sed -n '1,120p' README_CN.md || true
 
-      - name: Commit changes
+      - name: Commit changes and open PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -eux
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -91,11 +93,29 @@ jobs:
           echo "staged diff:" 
           git --no-pager diff --staged || true
 
-          # Only commit if there are staged changes
-          if ! git diff --staged --quiet; then
-            git commit -m "📊 Auto update LeetCode stats" || true
-            # push to the current branch
-            git push origin HEAD:${GITHUB_REF#refs/heads/} || true
-          else
+          # If no changes, exit cleanly
+          if git diff --staged --quiet; then
             echo "No changes to commit"
+            exit 0
           fi
+
+          git commit -m "📊 Auto update LeetCode stats"
+
+          # Create a new branch and push it. Avoid pushing to protected branch.
+          BRANCH="auto/update-stats-${GITHUB_RUN_ID}"
+          git branch -M "$BRANCH"
+          git push -u origin "$BRANCH"
+
+          # Create a pull request from the new branch to the current base branch
+          REPO="${GITHUB_REPOSITORY}"
+          BASE_BRANCH="${GITHUB_REF#refs/heads/}"
+          PR_TITLE="📊 Auto update LeetCode stats (#${GITHUB_RUN_ID})"
+          PR_BODY="This PR updates README stats automatically by workflow run ${GITHUB_RUN_ID}."
+
+          echo "Creating PR ${PR_TITLE} -> ${BASE_BRANCH}"
+
+          curl -s -X POST \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${REPO}/pulls \
+            -d "{\"title\":\"${PR_TITLE}\",\"head\":\"${BRANCH}\",\"base\":\"${BASE_BRANCH}\",\"body\":\"${PR_BODY}\"}"
