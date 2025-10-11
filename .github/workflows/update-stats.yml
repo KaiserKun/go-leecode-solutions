@@ -124,6 +124,11 @@ jobs:
           # Create a pull request using GitHub CLI (more reliable than curl)
           echo "Creating PR from ${BRANCH} -> ${BASE_BRANCH}"
           
+          EASY=${{ steps.count.outputs.easy }}
+          MEDIUM=${{ steps.count.outputs.medium }}
+          HARD=${{ steps.count.outputs.hard }}
+          TOTAL=${{ steps.count.outputs.total }}
+          
           gh pr create \
             --base "${BASE_BRANCH}" \
             --head "${BRANCH}" \
@@ -131,9 +136,9 @@ jobs:
             --body "This PR updates README.md and README_CN.md with the latest problem counts.
 
 **Stats:**
-- Easy: ${{ steps.count.outputs.easy }}
-- Medium: ${{ steps.count.outputs.medium }}
-- Hard: ${{ steps.count.outputs.hard }}
-- Total: ${{ steps.count.outputs.total }}
+- Easy: ${EASY}
+- Medium: ${MEDIUM}
+- Hard: ${HARD}
+- Total: ${TOTAL}
 
 Triggered by workflow run: ${GITHUB_RUN_ID}"
