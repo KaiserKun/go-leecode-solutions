@@ -92,8 +92,8 @@ jobs:
 
       - name: Commit changes and open PR
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 保留用于 checkout/push
-          GH_PAT: ${{ secrets.GH_PAT }}              # 你的 PAT secret 名称
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 保留用于 checkout/push
+          GH_PAT: ${{ secrets.GH_PAT }} # 你的 PAT secret 名称
         run: |
           set -eux
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -130,12 +130,11 @@ jobs:
           TOTAL=${{ steps.count.outputs.total }}
 
           cat > /tmp/pr_body.txt << EOF
-This PR updates README.md and README_CN.md with the latest problem counts.
 
-Stats: Easy ${EASY}, Medium ${MEDIUM}, Hard ${HARD}, Total ${TOTAL}
-
-Triggered by workflow run: ${GITHUB_RUN_ID}
-EOF
+          This PR updates README.md and README_CN.md with the latest problem counts.
+          Stats: Easy ${EASY}, Medium ${MEDIUM}, Hard ${HARD}, Total ${TOTAL}
+          Triggered by workflow run: ${GITHUB_RUN_ID}
+          EOF
 
           # Authenticate gh CLI with the PAT from secrets
           echo "$GH_PAT" | gh auth login --with-token
