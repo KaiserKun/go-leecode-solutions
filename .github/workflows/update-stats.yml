@@ -3,6 +3,7 @@ name: Update LeetCode Stats
 # Ensure the workflow has permission to update repository contents (push changes)
 permissions:
   contents: write
+  pull-requests: write
 
 on:
   push:
