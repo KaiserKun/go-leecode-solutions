@@ -37,10 +37,18 @@ jobs:
 
           echo "counts: easy=${EASY}, medium=${MEDIUM}, hard=${HARD}, total=${TOTAL}"
 
+          # 计算困难题占比（保留一位小数），避免除零
+          if [ "$TOTAL" -eq 0 ]; then
+            PERCENT="0.0"
+          else
+            PERCENT=$(awk "BEGIN{printf \"%.1f\", (${HARD}*100)/${TOTAL}}")
+          fi
+
           echo "easy=$EASY" >> $GITHUB_OUTPUT
           echo "medium=$MEDIUM" >> $GITHUB_OUTPUT
           echo "hard=$HARD" >> $GITHUB_OUTPUT
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "percent=$PERCENT" >> $GITHUB_OUTPUT
 
       - name: Update README.md (English)
         run: |
@@ -49,6 +57,7 @@ jobs:
           MEDIUM=${{ steps.count.outputs.medium }}
           HARD=${{ steps.count.outputs.hard }}
           TOTAL=${{ steps.count.outputs.total }}
+          PERCENT=${{ steps.count.outputs.percent }}
 
           # 更新英文版 README
           echo "--- README.md before ---"
@@ -62,6 +71,8 @@ jobs:
 
           # Update "Difficulty: X Easy / Y Medium / Z Hard" line
           sed -i "s/\*\*Difficulty\*\*: [0-9]\+ Easy \/ [0-9]\+ Medium \/ [0-9]\+ Hard/**Difficulty**: ${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard/g" README.md
+          # Update "Difficulty: X Easy / Y Medium / Z Hard (P%)" line (include percentage)
+          sed -i "s/^\s*- \*\*Difficulty\*\*:.*$/- **Difficulty**: ${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard (${PERCENT}%)/g" README.md
 
           echo "--- README.md after ---"
           head -n 20 README.md || true
@@ -73,6 +84,7 @@ jobs:
           MEDIUM=${{ steps.count.outputs.medium }}
           HARD=${{ steps.count.outputs.hard }}
           TOTAL=${{ steps.count.outputs.total }}
+          PERCENT=${{ steps.count.outputs.percent }}
 
           # 更新中文版 README
           echo "--- README_CN.md before ---"
@@ -86,6 +98,8 @@ jobs:
 
           # Update "难度分布：简单 X / 中等 Y / 困难 Z" line
           sed -i "s/\*\*难度分布\*\*：简单 [0-9]\+ \/ 中等 [0-9]\+ \/ 困难 [0-9]\+/**难度分布**：简单 ${EASY} \/ 中等 ${MEDIUM} \/ 困难 ${HARD}/g" README_CN.md
+          # Update "难度分布：简单 X / 中等 Y / 困难 Z（占比 P%）" line (include percentage)
+          sed -i "s/^\s*- \*\*难度分布\*\*：.*$/- **难度分布**：简单 ${EASY} \/ ${MEDIUM} \/ ${HARD}（占比 ${PERCENT}%）/g" README_CN.md
 
           echo "--- README_CN.md after ---"
           head -n 20 README_CN.md || true
