@@ -93,7 +93,7 @@ jobs:
       - name: Commit changes and open PR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 保留用于 checkout/push
-          GH_PAT: ${{ secrets.GH_PAT }} # 你的 PAT secret 名称
+          GH_TOKEN: ${{ secrets.GH_PAT }} # expose PAT as GH_TOKEN for gh CLI
         run: |
           set -eux
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -129,17 +129,11 @@ jobs:
           HARD=${{ steps.count.outputs.hard }}
           TOTAL=${{ steps.count.outputs.total }}
 
-          cat > /tmp/pr_body.txt << EOF
+          # Use printf to create PR body (avoids here-doc indentation issues)
+          printf "This PR updates README.md and README_CN.md with the latest problem counts.\n\nStats: Easy %s, Medium %s, Hard %s, Total %s\n\nTriggered by workflow run: %s\n" \
+            "${EASY}" "${MEDIUM}" "${HARD}" "${TOTAL}" "${GITHUB_RUN_ID}" > /tmp/pr_body.txt
 
-          This PR updates README.md and README_CN.md with the latest problem counts.
-          Stats: Easy ${EASY}, Medium ${MEDIUM}, Hard ${HARD}, Total ${TOTAL}
-          Triggered by workflow run: ${GITHUB_RUN_ID}
-          EOF
-
-          # Authenticate gh CLI with the PAT from secrets
-          echo "$GH_PAT" | gh auth login --with-token
-
-          # Create the PR (use --body-file for multi-line content)
+          # Create the PR (gh will read GH_TOKEN from environment)
           gh pr create \
             --base "${BASE_BRANCH}" \
             --head "${BRANCH}" \
