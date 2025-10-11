@@ -20,7 +20,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }} # Use PAT for all git operations
           # ensure the action keeps credentials for pushing and fetches full history
           persist-credentials: true
           fetch-depth: 0
@@ -92,8 +92,7 @@ jobs:
 
       - name: Commit changes and open PR
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 保留用于 checkout/push
-          GH_TOKEN: ${{ secrets.GH_PAT }} # expose PAT as GH_TOKEN for gh CLI
+          GH_TOKEN: ${{ secrets.GH_PAT }} # Use PAT for gh CLI (for creating PRs)
         run: |
           set -eux
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
