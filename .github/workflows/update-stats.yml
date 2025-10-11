@@ -16,15 +16,21 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          # ensure the action keeps credentials for pushing and fetches full history
+          persist-credentials: true
+          fetch-depth: 0
 
       - name: Count problems
         id: count
         run: |
+          set -eux
           # 统计各难度题目数量（排除测试文件）
           EASY=$(find easy -type f -name "*.go" ! -name "*_test.go" 2>/dev/null | wc -l)
           MEDIUM=$(find medium -type f -name "*.go" ! -name "*_test.go" 2>/dev/null | wc -l)
           HARD=$(find hard -type f -name "*.go" ! -name "*_test.go" 2>/dev/null | wc -l)
           TOTAL=$((EASY + MEDIUM + HARD))
+
+          echo "counts: easy=${EASY}, medium=${MEDIUM}, hard=${HARD}, total=${TOTAL}"
 
           echo "easy=$EASY" >> $GITHUB_OUTPUT
           echo "medium=$MEDIUM" >> $GITHUB_OUTPUT
@@ -33,32 +39,59 @@ jobs:
 
       - name: Update README.md (English)
         run: |
+          set -eux
           EASY=${{ steps.count.outputs.easy }}
           MEDIUM=${{ steps.count.outputs.medium }}
           HARD=${{ steps.count.outputs.hard }}
           TOTAL=${{ steps.count.outputs.total }}
 
           # 更新英文版 README
-          sed -i "s/\*\*[0-9]* problems solved\*\* ([0-9]* Easy \/ [0-9]* Medium \/ [0-9]* Hard)/**${TOTAL} problems solved** (${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard)/g" README.md
-          sed -i "s/Total\*\*: [0-9]* problems/Total**: ${TOTAL} problems/g" README.md
-          sed -i "s/Difficulty\*\*: [0-9]* Easy \/ [0-9]* Medium \/ [0-9]* Hard/Difficulty**: ${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard/g" README.md
+          echo "--- README.md before ---"
+          sed -n '1,120p' README.md || true
+
+          sed -i "s/\*\*[0-9]* problems solved\*\* ([0-9]* Easy \/ [0-9]* Medium \/ [0-9]* Hard)/**${TOTAL} problems solved** (${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard)/g" README.md || true
+          sed -i "s/Total\*\*: [0-9]* problems/Total**: ${TOTAL} problems/g" README.md || true
+          sed -i "s/Difficulty\*\*: [0-9]* Easy \/ [0-9]* Medium \/ [0-9]* Hard/Difficulty**: ${EASY} Easy \/ ${MEDIUM} Medium \/ ${HARD} Hard/g" README.md || true
+
+          echo "--- README.md after ---"
+          sed -n '1,120p' README.md || true
 
       - name: Update README_CN.md (Chinese)
         run: |
+          set -eux
           EASY=${{ steps.count.outputs.easy }}
           MEDIUM=${{ steps.count.outputs.medium }}
           HARD=${{ steps.count.outputs.hard }}
           TOTAL=${{ steps.count.outputs.total }}
 
           # 更新中文版 README
-          sed -i "s/已完成 \*\*[0-9]* 道\*\*（简单 [0-9]* \/ 中等 [0-9]* \/ 困难 [0-9]*）/已完成 **${TOTAL} 道**（简单 ${EASY} \/ 中等 ${MEDIUM} \/ 困难 ${HARD}）/g" README_CN.md
-          sed -i "s/总题数\*\*: [0-9]* 道/总题数**：${TOTAL} 道/g" README_CN.md
-          sed -i "s/难度分布\*\*：简单 [0-9]* \/ 中等 [0-9]* \/ 困难 [0-9]*/难度分布**：简单 ${EASY} \/ 中等 ${MEDIUM} \/ 困难 ${HARD}/g" README_CN.md
+          echo "--- README_CN.md before ---"
+          sed -n '1,120p' README_CN.md || true
+
+          sed -i "s/已完成 \*\*[0-9]* 道\*\*（简单 [0-9]* \/ 中等 [0-9]* \/ 困难 [0-9]*）/已完成 **${TOTAL} 道**（简单 ${EASY} \/ 中等 ${MEDIUM} \/ 困难 ${HARD}）/g" README_CN.md || true
+          sed -i "s/总题数\*\*: [0-9]* 道/总题数**：${TOTAL} 道/g" README_CN.md || true
+          sed -i "s/难度分布\*\*：简单 [0-9]* \/ 中等 [0-9]* \/ 困难 [0-9]*/难度分布**：简单 ${EASY} \/ 中等 ${MEDIUM} \/ 困难 ${HARD}/g" README_CN.md || true
+
+          echo "--- README_CN.md after ---"
+          sed -n '1,120p' README_CN.md || true
 
       - name: Commit changes
         run: |
+          set -eux
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add README.md README_CN.md
-          git diff --staged --quiet || git commit -m "📊 Auto update LeetCode stats"
-          git push
+          git add README.md README_CN.md || true
+
+          echo "git status:" 
+          git status --porcelain=v1 -b || true
+          echo "staged diff:" 
+          git --no-pager diff --staged || true
+
+          # Only commit if there are staged changes
+          if ! git diff --staged --quiet; then
+            git commit -m "📊 Auto update LeetCode stats" || true
+            # push to the current branch
+            git push origin HEAD:${GITHUB_REF#refs/heads/} || true
+          else
+            echo "No changes to commit"
+          fi
