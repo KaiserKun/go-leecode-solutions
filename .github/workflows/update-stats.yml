@@ -140,8 +140,4 @@ jobs:
 
 Triggered by workflow run: ${GITHUB_RUN_ID}"
           
-          gh pr create \
-            --base "${BASE_BRANCH}" \
-            --head "${BRANCH}" \
-            --title "📊 Auto update LeetCode stats" \
-            --body "${PR_BODY}"
+          gh pr create --base "${BASE_BRANCH}" --head "${BRANCH}" --title "📊 Auto update LeetCode stats" --body "${PR_BODY}"
