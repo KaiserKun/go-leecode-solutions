@@ -3,7 +3,6 @@ name: Update LeetCode Stats
 # Ensure the workflow has permission to update repository contents (push changes)
 permissions:
   contents: write
-  pull-requests: write
 
 on:
   push:
@@ -104,9 +103,7 @@ jobs:
           echo "--- README_CN.md after ---"
           head -n 20 README_CN.md || true
 
-      - name: Commit changes and open PR
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }} # Use PAT for gh CLI (for creating PRs)
+      - name: Commit and push changes
         run: |
           set -eux
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -124,31 +121,8 @@ jobs:
             exit 0
           fi
 
-          git commit -m "📊 Auto update LeetCode stats"
+          # Commit with [skip ci] to prevent triggering this workflow again
+          git commit -m "📊 Auto update LeetCode stats [skip ci]"
 
-          # Create a new branch and push it. Avoid pushing to protected branch.
-          BRANCH="auto/update-stats-${GITHUB_RUN_ID}"
-          BASE_BRANCH="${GITHUB_REF#refs/heads/}"
-
-          # Create and checkout new branch
-          git checkout -b "$BRANCH"
-
-          # Push the new branch (GITHUB_TOKEN is preserved by actions/checkout)
-          git push -u origin "$BRANCH"
-
-          # Create PR body content using a here-document
-          EASY=${{ steps.count.outputs.easy }}
-          MEDIUM=${{ steps.count.outputs.medium }}
-          HARD=${{ steps.count.outputs.hard }}
-          TOTAL=${{ steps.count.outputs.total }}
-
-          # Use printf to create PR body (avoids here-doc indentation issues)
-          printf "This PR updates README.md and README_CN.md with the latest problem counts.\n\nStats: Easy %s, Medium %s, Hard %s, Total %s\n\nTriggered by workflow run: %s\n" \
-            "${EASY}" "${MEDIUM}" "${HARD}" "${TOTAL}" "${GITHUB_RUN_ID}" > /tmp/pr_body.txt
-
-          # Create the PR (gh will read GH_TOKEN from environment)
-          gh pr create \
-            --base "${BASE_BRANCH}" \
-            --head "${BRANCH}" \
-            --title "📊 Auto update LeetCode stats" \
-            --body-file /tmp/pr_body.txt
+          # Push directly to the current branch
+          git push
