@@ -1,4 +1,4 @@
-package medium
+package dp
 
 // link: https://leetcode.cn/problems/count-square-submatrices-with-all-ones/
 // thought: 动态规划，dp[i][j]表示以(i,j)为右下角的全1正方形的边长
