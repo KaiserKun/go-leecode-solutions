@@ -10,12 +10,12 @@
 
 ## English
 
-Go implementations of LeetCode problems. **29 problems solved** (8 Easy / 15 Medium / 6 Hard).
+Go implementations of LeetCode problems. **30 problems solved** (8 Easy / 16 Medium / 6 Hard).
 
 ### 📊 Stats
 
-- **Total**: 29 problems
-- **Difficulty**: 8 Easy / 15 Medium / 6 Hard (20.7%)
+- **Total**: 30 problems
+- **Difficulty**: 8 Easy / 16 Medium / 6 Hard (20.0%)
 - **Ranking**: Top 51.77% globally
 - **Contest Rating**: 1498
 - **Submissions**: 698 in the past year
