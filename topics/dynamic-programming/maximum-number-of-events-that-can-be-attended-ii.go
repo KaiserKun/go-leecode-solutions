@@ -1,4 +1,4 @@
-package dp
+package dynamicprogramming
 
 // link: https://leetcode.cn/problems/maximum-number-of-events-that-can-be-attended-ii/
 // thought: 动态规划，dp[i][j]表示前i个活动中选择j个活动的最大价值
