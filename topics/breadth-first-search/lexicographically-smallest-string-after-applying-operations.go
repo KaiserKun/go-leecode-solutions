@@ -1,4 +1,4 @@
-package bfs
+package breadthfirstsearch
 
 // link: https://leetcode.cn/problems/lexicographically-smallest-string-after-applying-operations/
 // thought: 分别处理b为偶数和奇数的情况,b为偶数时只能改变偶数位，b为奇数时可以改变所有位； 使用集合记录所有可能的字符串，最后返回字典序最小的字符串
