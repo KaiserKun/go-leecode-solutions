@@ -76,7 +76,7 @@ go test ./hard
 
 ### 📧 Contact
 
-- LeetCode: [@KaiserKun](https://leetcode.cn/u/KaiserKun/)
+- LeetCode: [@KaiserKun](https://leetcode.cn/u/2024-3s/)
 - GitHub: [@KaiserKun](https://github.com/KaiserKun)
 - Email: coderxiao@126.com
 

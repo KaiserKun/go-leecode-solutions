@@ -66,7 +66,7 @@ go test ./hard
 
 ### 📧 联系方式
 
-- LeetCode：[@KaiserKun](https://leetcode.cn/u/KaiserKun/)
+- LeetCode：[@KaiserKun](https://leetcode.cn/u/2024-3s/)
 - GitHub：[@KaiserKun](https://github.com/KaiserKun)
 - 邮箱：coderxiao@126.com
 
