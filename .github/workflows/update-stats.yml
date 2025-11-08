@@ -1,8 +1,9 @@
 name: Update LeetCode Stats
 
-# Ensure the workflow has permission to update repository contents (push changes)
+# Ensure the workflow has permission to update repository contents (push changes) and metadata (About section)
 permissions:
   contents: write
+  metadata: write
 
 on:
   push:
@@ -19,7 +20,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use GH_PAT if available, otherwise fall back to GITHUB_TOKEN
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           # ensure the action keeps credentials for pushing and fetches full history
           persist-credentials: true
           fetch-depth: 0
@@ -102,6 +104,43 @@ jobs:
 
           echo "--- README_CN.md after ---"
           head -n 20 README_CN.md || true
+
+      - name: Update Repository About Section
+        run: |
+          set -eux
+          EASY=${{ steps.count.outputs.easy }}
+          MEDIUM=${{ steps.count.outputs.medium }}
+          HARD=${{ steps.count.outputs.hard }}
+          TOTAL=${{ steps.count.outputs.total }}
+          PERCENT=${{ steps.count.outputs.percent }}
+
+          # 构建新的描述文本
+          DESCRIPTION="LeetCode Solutions in Go - ${TOTAL} problems solved (${EASY} Easy / ${MEDIUM} Medium / ${HARD} Hard) | Rank: Top 51.77% | Contest Rating 1498"
+
+          echo "Updating repository About with description: ${DESCRIPTION}"
+
+          # 调用 GitHub API 更新 repo description 和 topics
+          # 注意：需要 GH_PAT 或具有足够权限的 GITHUB_TOKEN
+          RESPONSE=$(curl -s -X PATCH \
+            -H "Authorization: token ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }} \
+            -d @- <<EOF
+          {
+            "description": "${DESCRIPTION}",
+            "topics": ["leetcode", "go", "algorithms", "dsa", "problem-solving"]
+          }
+          EOF
+          )
+
+          echo "API Response: ${RESPONSE}"
+
+          # 检查响应中是否包含错误
+          if echo "${RESPONSE}" | grep -q '"message".*"Not Found"'; then
+            echo "⚠️ Warning: Failed to update repository metadata. This may require a Personal Access Token (PAT) with 'repo' scope."
+            echo "To fix: Add GH_PAT secret to your repository with appropriate permissions."
+            exit 0
+          fi
 
       - name: Commit and push changes
         run: |
